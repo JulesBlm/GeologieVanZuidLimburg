@@ -12,3 +12,92 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
     monospace;
 }
+
+a {
+  color: white;
+}
+
+.control-panel {
+  display: flex;
+  justify-content: space-around;
+  flex-direction: column;
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 30%;
+  height: 100%;
+  background: #fff;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+  font-size: 13px;
+  line-height: 2;
+  color: #6b6b76;
+  outline: none;
+}
+
+.text {
+  padding: 12px 24px;
+  max-height: calc(100% - 140px);
+  overflow-y: scroll;
+}
+
+#timescale {
+  position: sticky;
+  bottom: 0px;
+}
+
+label {
+  display: inline-block;
+  width: 100px;
+}
+
+input {
+  margin-left: 20px;
+  width: 160px;
+}
+
+.tooltip {
+  position: absolute;
+  margin: 8px;
+  padding: 4px;
+  background: rgba(0, 0, 0, 0.8);
+  color: #fff;
+  max-width: 300px;
+  font-size: 10px;
+  z-index: 9;
+  pointer-events: none;
+}
+
+/* geo-timescale */
+.timescale {
+  font-family: Helvetica, sans-serif;
+  font-weight: 100;
+  font-size: 0.8em;
+  color:#333;
+  cursor: pointer;
+}
+
+rect {
+stroke: #fff;
+stroke-width:1px;
+}
+#l0 {
+fill:#fff !important;
+}
+line {
+stroke:#777;
+}
+.level1 {
+font-size: 1.2em;
+}
+.level2 {
+font-size: 1.1em;
+}
+.level3 {
+font-size: 0.85em;
+}
+.level4 {
+font-size: 0.75em;
+}
+.level5 {
+font-size: 0.7em;
+}
