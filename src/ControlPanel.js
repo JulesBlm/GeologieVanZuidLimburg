@@ -17,18 +17,18 @@ export default class ControlPanel extends PureComponent {
     }
 
     componentDidMount() {
-        console.log("Component mounted. Should init timescale")
         timescale.init("timescale");
     }
 
-    handleClick() {
+    handleClick(amount) {
+        console.log(amount);
         const { index } = this.state;
-        if (index > -1 && index < plaatsen.length - 1 ) {
+        if (index => 0 && index < plaatsen.length - 1 ) {
             this.setState((prevState) => {
-                return { index: prevState.index+1 };
+                return { index: prevState.index+amount };
             });
          
-            const place = plaatsen[this.state.index + 1];
+            const place = plaatsen[this.state.index + amount];
             this.props.goToViewport(place);
             if (place.mapstyle) { this.props.changeMapStyle(place.mapstyle); }; ////"mapstyle": "mapbox://styles/mapbox/satellite-streets-v9"
             timescale.goTo(place.period);
@@ -38,18 +38,28 @@ export default class ControlPanel extends PureComponent {
     render() {
         const Container = this.props.containerComponent || defaultContainer;
         const currentPlace = plaatsen[this.state.index];
-        console.log(this.state.index);
+        console.log("index", this.state.index);
 
         return (
             <Container>
                 <div className="text">
                     <h2>{currentPlace.name}</h2>
                     <h3>{currentPlace.period}</h3>
-                    <p>
-                        {currentPlace.description}
-                    </p>
-                    <button onClick={() => this.handleClick()} className="control"> Vorige </button>
-                    <button onClick={() => this.handleClick()} className="control"> Volgende </button>
+                    <p>{currentPlace.description}</p>
+                </div>
+                <div id="button-bar">
+                    <button
+                        onClick={() => this.handleClick(-1)}
+                        className="control"
+                        disabled={this.state.index === 0}>
+                        Vorige
+                    </button>
+                    <button 
+                        onClick={() => this.handleClick(1)} 
+                        className="control"
+                        disabled={this.state.index === plaatsen.length}>
+                        Volgende
+                    </button>
                 </div>
                 <div id="timescale"></div>
             </Container>

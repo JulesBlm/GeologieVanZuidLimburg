@@ -18,29 +18,36 @@ a {
 }
 
 .control-panel {
-  display: flex;
-  justify-content: space-around;
-  flex-direction: column;
+  display: grid;
+  grid-template-rows: [text] 4fr [buttonbar] 0.5fr [timescale] 1fr;
   position: absolute;
   top: 0;
   right: 0;
   width: 30%;
   height: 100%;
   background: #fff;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+  box-shadow: 0 4px 4px rgba(0,0,0,0.7);
   font-size: 13px;
   line-height: 2;
-  color: #6b6b76;
+  color: #333;
   outline: none;
 }
 
 .text {
-  padding: 12px 24px;
-  max-height: calc(100% - 140px);
+  padding: 10px;
+  /* min-height: 30vh; */
   overflow-y: scroll;
+  box-shadow: 10px 0 5px -2px #888;
+  /* box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.6); */
 }
 
 #timescale {
+  position: sticky;
+  bottom: 0px !important;
+}
+
+#button-bar {
+  margin: 10px;
   position: sticky;
   bottom: 0px;
 }
@@ -67,6 +74,31 @@ input {
   pointer-events: none;
 }
 
+.control {
+  border: 2px solid #333;
+  padding: 10px;
+  font-weight: 700;
+  font-size: 1.3em;
+  border-radius: 10%;
+  margin-right: 90px;
+  transition: 250ms all ease;
+}
+
+.control:hover {
+  color: white;
+  background: #333;
+}
+
+.control[disabled] {
+	background-color:  #333;
+  color: slategray;
+	cursor: not-allowed;	
+}
+
+.control[disabled]:hover {
+  color: slategray;
+}
+
 /* geo-timescale */
 .timescale {
   font-family: Helvetica, sans-serif;
@@ -82,6 +114,8 @@ stroke-width:1px;
 }
 #l0 {
 fill:#fff !important;
+font-size: 1.2em;
+font-weight: 700;
 }
 line {
 stroke:#777;

@@ -1,8 +1,9 @@
 /*
+0. Center timescale labels
 1. Add correct lat lon's
-2. Add geotimescale
-3. Think about and fix layout
-4. Add nice forward and back buttons
+2. Add more text
+3. CCS grid right bar
+4. Apollo JS
 */
 import React, {Component} from 'react';
 import {render} from 'react-dom';

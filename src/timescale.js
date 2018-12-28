@@ -43,7 +43,7 @@ const timescale = (function() {
   const height = 130;
 
   // Initialize data
-  const data = { oid: 0, nam: "Geologische Tijd", children: [] };
+  const data = { oid: 0, nam: "Geologische Tijdschaal", children: [] };
   const interval_hash = { 0: data };
   let currentInterval;
   let root;
@@ -361,19 +361,20 @@ const timescale = (function() {
         });
 
       // Center whichever interval was clicked
-     select("#l" + d.data.oid).transition(t)
+      select("#l" + d.data.oid).transition(t)
         .attr("x", width/2);
 
       // Position all the parent labels in the middle of the scale
       if (d.parent !== null) {
         const depth = d.depth;
+        let loc = "d.parent";
         for (let i=0; i < depth; i++) {
-          const parent = d.parent.data.nam;
+          const parent = eval(loc).data.nam;
           selectAll('.abbr').filter(d => d.data.nam === parent ).transition(t)
             .attr("x", width/2);
           selectAll('.fullName').filter(d => d.data.nam === parent ).transition(t)
             .attr("x", width/2);
-          // loc += ".parent";
+          loc += ".parent";
         }
         selectAll('.abbr').filter(d => d.data.nam === d.parent).transition(t)
           .attr("x", width/2);
