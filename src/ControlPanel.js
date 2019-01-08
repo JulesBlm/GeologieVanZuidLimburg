@@ -21,7 +21,6 @@ export default class ControlPanel extends PureComponent {
     }
 
     handleClick(amount) {
-        console.log(amount);
         const { index } = this.state;
         if (index => 0 && index < plaatsen.length - 1 ) {
             this.setState((prevState) => {
@@ -38,14 +37,14 @@ export default class ControlPanel extends PureComponent {
     render() {
         const Container = this.props.containerComponent || defaultContainer;
         const currentPlace = plaatsen[this.state.index];
-        console.log("index", this.state.index);
+        // console.log("index", this.state.index);
 
         return (
             <Container>
                 <div className="text">
                     <h2>{currentPlace.name}</h2>
                     <h3>{currentPlace.period}</h3>
-                    <p>{currentPlace.description}</p>
+                    <p dangerouslySetInnerHTML={ {__html:currentPlace.description} } />
                 </div>
                 <div id="button-bar">
                     <button

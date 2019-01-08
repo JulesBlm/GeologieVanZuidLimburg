@@ -1,9 +1,16 @@
 /*
-0. Center timescale labels
 1. Add correct lat lon's
 2. Add more text
-3. CCS grid right bar
-4. Apollo JS
+3. Bundle mapbox CSS
+4. Add meta description
+5. Favicon
+6. SetInnerHTML text?
+
+Potential
+0. Images and (temperature) charts
+1. Async descriptions [Apollo JS]
+2. Performance improvements
+3. Bring water to front
 */
 import React, {Component} from 'react';
 import {render} from 'react-dom';
@@ -14,7 +21,7 @@ import {MapboxLayer} from "@deck.gl/mapbox";
 import ControlPanel from './ControlPanel';
 
 import geomap from './geologielimburg.json';
-import key from './key.js'
+import key from './key.json'
 
 const MAPBOX_TOKEN = 'pk.eyJ1Ijoid29tcG8iLCJhIjoiY2pwd3NweXAwMHgzejQzbW11cG9ucWY4ZiJ9.S9-VQRVZ_DWo-b2DhXWPYA'; // Set your mapbox token here
 
@@ -61,7 +68,7 @@ export default class App extends Component {
   }
 
   _goToViewport = ({latitude, longitude, zoom}) => {
-    console.log("going to viewport");
+    // console.log("going to viewport");
     this.setState({
       viewState: {
         ...this.state.viewState,

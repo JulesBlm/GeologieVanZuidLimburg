@@ -9,9 +9,6 @@ import { partition, hierarchy } from "d3-hierarchy";
 import { json } from "d3-fetch";
 import { easeLinear } from "d3-ease";
 
-//import intervals from './intervals.json';
-
-
 const timescale = (function() {
   // Via http://stackoverflow.com/questions/14167863/how-can-i-bring-a-circle-to-the-front-with-d3
   // Necessary for highlighting time intervals properly
@@ -265,7 +262,7 @@ const timescale = (function() {
     // Zooms the graph to a given time interval
     // Accepts a data point or a named interval
     "goTo": function(d) {
-      console.log("goto", d);
+      // console.log("goto", d);
       if (typeof d == "string") {
         d = searchTree(root, "nam", d)
       } else if (d.children) {
