@@ -3,12 +3,10 @@
 2. Add more text
 3. Bundle mapbox CSS
 4. Add meta description
-5. Favicon
-6. SetInnerHTML text?
 
 Potential
 0. Images and (temperature) charts
-1. Async descriptions [Apollo JS]
+1. Async descriptions
 2. Performance improvements
 3. Bring water to front
 */
