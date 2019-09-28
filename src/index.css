@@ -44,7 +44,7 @@ a {
 
 #timescale {
   position: sticky;
-  bottom: 0px !important;
+  bottom: 10px !important;
 }
 
 #button-bar {
@@ -86,7 +86,7 @@ input {
   outline: none;
 }
 
-.control:hover {
+.control:hover, .control:focus {
   color: white;
   background: #333;
   outline: none;
@@ -147,17 +147,6 @@ font-size: 0.7em;
 
 @media (min-width: 320px) and (max-width: 480px) {
   
-  .control-panel {
-    top: 55%;
-    height: 45%;
-    width: 100%;
-    display: flex;
-  }  
-
-  #deckgl-overlay {
-    width: 100% !important;
-  }
-
   #button-bar {
     position: relative;
     margin: 0;

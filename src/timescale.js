@@ -1,11 +1,9 @@
 // 1. Fix drag
-// 2. Fix ticks
-
 import { selection, select, selectAll } from "d3-selection"; //event
-// import { drag } from "d3-drag"
+import { drag } from "d3-drag"
 import { scaleLinear } from "d3-scale";
 import { transition } from "d3-transition";
-import { partition, hierarchy } from "d3-hierarchy";
+import { partition, stratify } from "d3-hierarchy";
 import { json } from "d3-fetch";
 import { easeLinear } from "d3-ease";
 
@@ -37,17 +35,17 @@ const timescale = (function() {
   }
 
   let width = 0.3 * window.innerWidth - 4;
-  const height = 130;
+  const height = 150;
 
   // Initialize data
-  const data = { oid: 0, nam: "Geologische Tijdschaal", children: [] };
-  const interval_hash = { 0: data };
-  let currentInterval;
   let root;
+  let x;
+  // let dragStart;
+  // let transformStart;
 
   return {
 
-    "init": function(div) {
+    "init": function(divId) {
 
       // let newX = 0.01;
       // let transformStart;
@@ -77,14 +75,13 @@ const timescale = (function() {
       //       });
       //   });
       
-      // Add class timescale to whatever div was supplied
-     select("#" + div).attr("class", "timescale");
+      // Add class timescale to whatever divId was supplied
+     select(`#${divId}`).attr("class", "timescale");
 
-      // !!!Move into draw!
       // Create the SVG for the chart
-      const time = select("#" + div).append("svg")
+      const time = select(`#${divId}`).append("svg")
           .attr("width", width)
-          .attr("height", height + 20)
+          .attr("height", height + 40)
           .append("g");
 
       // Move whole tick SVG group down 125px
@@ -92,69 +89,76 @@ const timescale = (function() {
         .attr("id", "tickBar")
         .attr("transform", `translate(0,${height-5})`);
 
-      // Create a new d3 partition layout
+      x = scaleLinear()
+        .range([5, width])
+        .domain([5, width]); 
+
+      // Create a new partition layout
       const partitionFunc = partition()
         .size([width, height])
         .padding(0);
 
       // Load the time scale data
-      json("intervals.json").then(function(result) {
+      json("intervals.json").then(result => {
+        root = stratify()
+          .id(d => d.id)
+          .parentId(d => d.parentId )(result.records); //? add time for Holocene
 
-        // Construct hierarchy variable 'data' by oid's from paleoJSON
-        result.records.forEach(i => {
-          i.children = [];
-          i.pid = i.pid || 0; // Check if i is not a highest level period
-          i.abr = i.abr || i.nam.charAt(0);
-          i.mid = parseInt((i.eag + i.lag) / 2); //length of period
-          i.total = i.eag - i.lag;
-          interval_hash[i.oid] = i;
-          interval_hash[i.pid].children.push(i);
-        })
-        
-        root = hierarchy(data)
-          .sum(d => (d.children.length === 0) ? d.total + 0.117 : 0 ); //? add time for Holocene
+        // Only sum lowest level timespans
+        partition(root.sum(d => (d.level === 5) ? d.start - d.end : 0 )) //
 
         partitionFunc(root);
-
+        
         const rectGroup = time.append("g")
           .attr("id", "rectGroup");
 
-        // Create the rectangles
-        rectGroup.selectAll("rect")
-            .data( root.descendants() )
-          .enter().append("rect")
-            .attr("x", function(d) { return d.x0; })
-            .attr("y", function(d) { return d.y0; })
-            .attr("width", function(d) { return d.x1 - d.x0; })
-            .attr("height", function(d) { return d.y1 - d.y0; })
-            .attr("fill", function(d) { return d.data.col || "#000"; })
-            .attr("id", function(d) { return "t" + d.data.oid; })
+        const cell = rectGroup
+          .selectAll("rect")
+          .data(root.descendants())
+          .join("rect")
+            .attr("x", d => d.x0)
+            .attr("y", d => d.y0)
+            .attr("width", d => (d.x1 - d.x0))
+            .attr("height", d => (d.y1 - d.y0))
+            .attr("fill", d => d.data.color)
+            .attr("id", d => `t${d.data.id}`)
             .style("opacity", 0.83)
-            // .call(dragFunc)
-            .on("click", function(d) { timescale.goTo(d); });
+            .call(drag)
+            .on("click", d => timescale.goTo(d) );
+
+        cell.append("title")
+          .text(d => `${d.ancestors().map(d => d.data.name).reverse().join(" > ")}`);
+
+        const uniqueAgesSet = new Set(root.descendants().map(node => node.data.start))
+        const uniqueAgesArray = Array.from(uniqueAgesSet)
+          .map(start => (root.descendants()).find(node => node.data.start === start))
 
         // Scale bar for the bottom of the graph
         const scaleBar = scale.selectAll("rect")
-          .data(root.descendants());
+          .data(uniqueAgesArray);
 
         const hash = scaleBar.enter().append("g")
-          .attr("class", function(d) { return "tickGroup s" + d.data.lvl})
-          .attr("transform", function(d) { return `translate(${d.x0}, 0)`}); 
+          .attr("class", d => `tickGroup s${d.depth}`)
+          .attr("transform", d => `translate(${d.x0}, 0)`); 
 
         hash.append("line")
           .attr("x1", 0)
-          .attr("y1", 6)
+          .attr("y1", 7.5)
           .attr("x2", 0)
-          .attr("y2", 12)
-          .style("stroke-width", "0.05em");
+          .attr("y2", d => 52 - d.depth * 8)
+          .style("stroke-width", d => "0.05em");
 
         hash.append("text")
           .attr("x", 0)
-          .attr("y", 25)
-          .style("text-anchor", function(d) { return (d.data.eag !== 0.0117) ? "middle" : "end"; })
-          .style("font-size", "1.2em")
-          .style("fill", "#000")
-          .text(function(d) { return d.data.eag; });
+          .attr("y", d => 60 - d.depth * 8)
+          .style("text-anchor", d => ((d.data.start !== 0.0117) ? "middle" : "end"))
+          .style("font-size", d => `${0.9 - 0.08 * d.depth}em`)
+          .attr("paint-order", "stroke")
+          .attr("stroke-width", "1.5px")
+          .attr("stroke", "#fff")
+          .attr("stroke-linecap", "butt")
+          .attr("stroke-linejoin", "miter")
+          .text(d => d.data.start );
 
         // Create a tick for year 0
         const now = scale.append("g")
@@ -183,32 +187,31 @@ const timescale = (function() {
           .attr("id", "textGroup");
 
         // Add the full labels
-        textGroup.selectAll("fullName")
-            .data( root.descendants() )
-          .enter().append("text")
-            .text(function(d) { return d.data.nam; })
-            .attr("x", 1)
-            .attr("y", function(d) { return d.y0 + 15;})
-            .attr("width", function() { return this.getComputedTextLength(); })
-            .attr("height", function(d) { return d.y1 - d.y0; })
-            .attr("class", function(d) { return "fullName level" + d.data.lvl; })
-            .attr("id", function(d) { return "l" + d.data.oid; })
-            .attr("x", function(d) { return timescale.labelX(d); })
-            .on("click", function(d) { timescale.goTo(d); });
+        textGroup.append("g").attr("id", "fullNames").selectAll("text")
+            .data(root.descendants())
+          .join("text")
+            .text(d => d.data.name )
+            .attr("y", d =>  d.y0 + 15)
+            .attr("width", 40) //function() {return this.getComputedTextLength();})
+            .attr("height", d =>  d.y1 - d.y0 )
+            .attr("class", d => `fullName level${d.depth}`)
+            .attr("id", d =>  `l${d.data.id}`)
+            .attr("x", d => timescale.labelX(d))
+            .on("click", d => timescale.goTo(d));
 
         // Add the abbreviations
-        textGroup.selectAll("abbrevs")
-            .data( root.descendants() )
-          .enter().append("text")
-            .attr("x", 1)
-            .attr("y", function(d) { return d.y0 + 15; })
+        textGroup.append("g").attr("id", "abbrevs")
+          .selectAll("text")
+            .data(root.descendants() )
+          .join("text")
+            .text(d => d.data.abr || d.data.name.charAt(0))
+            .attr("y", d => d.y0 + 15)
             .attr("width", 30)
-            .attr("height", function(d) { return d.y1 - d.y0; })
-            .text(function(d) { return d.data.abr; }) //charAt(0)
-            .attr("class", function(d) { return "abbr level" + d.data.lvl; })
-            .attr("id", function(d) { return "a" + d.data.oid; })
-            .attr("x", function(d) { return timescale.labelAbbrX(d); })
-            .on("click", function(d) { timescale.goTo(d); });
+            .attr("height", d => d.y1 - d.y0)
+            .attr("class", d => `abbr level${d.depth}`)
+            .attr("id", d => `a${d.data.id}`)
+            .attr("x", d => timescale.labelAbbrX(d))
+            .on("click", d => timescale.goTo(d) );
 
         // Position the labels for the first time
         timescale.goTo(root);
@@ -217,8 +220,7 @@ const timescale = (function() {
         select(".abbr.levelundefined").remove();
         
         // Open to Phanerozoic 
-        timescale.goTo("Phanerozoïcum");
-        timescale.currentInterval = searchTree(root, "nam", "Phanerozoïcum");
+        timescale.goToName("Phanerozoïcum");
       }); // End PaleoDB json callback
       //attach window resize listener to the window
       select(window).on("resize", timescale.resize);
@@ -226,67 +228,54 @@ const timescale = (function() {
 
     // Calculates x-position for label abbreviations
     "labelAbbrX": function(d) {
-      const rectWidth = parseFloat(select("#t" + d.data.oid).attr("width")),
-          rectX = parseFloat(select("#t" + d.data.oid).attr("x"));
+      const rectWidth = x(d.x1) - x(d.x0),
+            rectX = x(d.x0);
 
-      let labelWidth = select("#a" + d.data.oid).node().getComputedTextLength();
+      const abbrevWidth = select(`#a${d.data.id}`).node().getComputedTextLength();
 
-      if (rectWidth - 8 < labelWidth) {
-       select("#a" + d.data.oid).style("display", "none");
+      if (rectWidth - 8 < abbrevWidth) {
+        select(`#a${d.data.id}`).style("display", "none");
       }
 
-      return rectX + (rectWidth - labelWidth) / 2;
+      return rectX + (rectWidth - abbrevWidth) / 2;
     },
     
     "labelX": function(d) {
-      const rectWidth = d.x1 - d.x0;
-      const rectX = d.x0;
+      const rectWidth = x(d.x1) - x(d.x0),
+            rectX = x(d.x0);
 
       let labelWidth;
       try {
-        labelWidth = select("#l" + d.data.oid).node().getComputedTextLength();
+        labelWidth = select(`#l${d.data.id}`).node().getComputedTextLength(); //this?
       } catch(err) {
         labelWidth = 25;
       }
 
       // Hide full names if they are too small for their rectangles
-      if (rectWidth - 10 < labelWidth) {
-       select("#l" + d.data.oid).style("display", "none");
+      if (rectWidth - 8 < labelWidth) {
+        select(`#l${d.data.id}`).style("display", "none");
       } else {
-       select("#a" + d.data.oid).style("display", "none");
+        select(`#a${d.data.id}`).style("display", "none");
       }
 
       return rectX + (rectWidth - labelWidth) / 2;
+    },
+    
+    "goToName": function(periodName) {
+      const periodNode = searchTree(root, "name", periodName)
+      timescale.goTo(periodNode)
     },
 
     // Zooms the graph to a given time interval
     // Accepts a data point or a named interval
     "goTo": function(d) {
-      // console.log("goto", d);
-      if (typeof d == "string") {
-        d = searchTree(root, "nam", d)
-      } else if (d.children) {
-          if (d.children.length < 1) {
-            d = d.data.parent;
-          }
-      }
-
       // Stores the currently focused time interval for state restoration purposes
       timescale.currentInterval = d;
 
-     selectAll(".fullName")
+     selectAll(".fullName, .abbr")
       .style("display", "block");
 
-     selectAll(".abbr")
-        .style("display", "block");
-      
-      // Adjust the bottom scale
-      const depth = (d.depth !== 'undefined') ? parseInt(d.depth) + 1 : 1;
-     selectAll(".scale").style("display", "none");
-     selectAll(".tickGroup").style("display", "none");
-     selectAll(".s" + depth).style("display", "block");
-
-      const x = scaleLinear()
+      x = scaleLinear()
         .range([5, width])
         .domain([d.x0, d.x1]); 
 
@@ -295,118 +284,57 @@ const timescale = (function() {
         .duration(300)
         .ease(easeLinear);
 
-      // Transition the rectangles
-     selectAll("rect").transition(t)
-        .attr("x", function(d) { return x(d.x0); })
-        .attr("width", function(d) { return x(d.x1) - x(d.x0); })    
-
-      // Transition tick groups
-     selectAll(".tickGroup").transition(t)
-        .attr("transform", function(d) {
-         select(this).selectAll("text").style("text-anchor", "middle");
-          if (x(d.x0) === 5) {
-           select(this).select("text")
-              .style("text-anchor", "start");
-          } else if (d.x0 === width) {
-           select(this).select("text")
-              .style("text-anchor", "end");
-          }
-          if (typeof x(d.x0) === 'number') {return `translate(${x(d.x0)}, 0)`}
-        });
-        
-      // Move the full names, to keep animation concurrent labelX has to be calculated inside to goTo function
-     selectAll(".fullName").transition(t)
-        .attr("x", function(d) { 
-            const rectWidth = x(d.x1) - x(d.x0),
-                  rectX = x(d.x0);
-
-            let labelWidth;
-            try {
-              labelWidth = select("#l" + d.data.oid).node().getComputedTextLength(); //this?
-            } catch(err) {
-              labelWidth = 25;
-            }
-
-            if (rectWidth - 8 < labelWidth) {
-             select("#l" + d.data.oid).style("display", "none");
-           } else {
-             select("#a" + d.data.oid).style("display", "none");
-           }
-
-            return rectX + (rectWidth - labelWidth) / 2;
-        })
-        .attr("height", function(d) { return d.y1 - d.y0; })
-
-      //Move the abbreviations
-      selectAll(".abbr").transition(t)
-        .attr("x", function(d) {
-          const rectWidth = x(d.x1) - x(d.x0);
-          const rectX = x(d.x0);
-
-          let abbrevWidth = select("#a" + d.data.oid).node().getComputedTextLength();
-          
-          if (rectWidth - 8 < abbrevWidth) {
-           select("#a" + d.data.oid).style("display", "none");
-          }
-          
-          return rectX + (rectWidth - abbrevWidth) / 2;
-        })
-        .attr("height", function(d) { return d.y1 - d.y0; })
-        .on("end", function() { 
-         selectAll(".fullName").style("fill", "#333");
-         selectAll(".abbr").style("fill", "#333");
-        });
-
-      // Center whichever interval was clicked
-      select("#l" + d.data.oid).transition(t)
-        .attr("x", width/2);
-
-      // Position all the parent labels in the middle of the scale
-      if (d.parent !== null) {
-        const depth = d.depth;
-        let loc = "d.parent";
-        for (let i=0; i < depth; i++) {
-          const parent = eval(loc).data.nam;
-          selectAll('.abbr').filter(d => d.data.nam === parent ).transition(t)
-            .attr("x", width/2);
-          selectAll('.fullName').filter(d => d.data.nam === parent ).transition(t)
-            .attr("x", width/2);
-          loc += ".parent";
-        }
-        selectAll('.abbr').filter(d => d.data.nam === d.parent).transition(t)
-          .attr("x", width/2);
-        selectAll('.fullName').filter(d => d.data.nam === d.parent).transition(t)
-          .attr("x", width/2);
-      }        
-    },
-
-    // Highlight a given time interval
-    "highlight": function(d) {
-
-     selectAll("rect").style("stroke", "#fff");
-     let id;
-      if (d.cxi) {
-        id = d.cxi;
-       selectAll("rect#t" + d.cxi).style("stroke", "#000").moveToFront();
-       selectAll("#l" + d.cxi).moveToFront();
-      } else if (typeof d == "string") {
-        id = selectAll('rect').filter(function(e) {
-          return e.nam === d;
-        }).attr("id");
-        id = id.replace("t", "");
+      // Hide lowest two time labels
+      if (d.depth === 0 || d.depth === 1) {
+        selectAll(`.s5, .s4`).transition(t).style("display", "none");
       } else {
-        id = select(d).attr("id");
-        id = id.replace("p", "");
+        selectAll(`.s5, .s4`).transition(t).style("display", "block");
       }
 
-     selectAll(`rect#t${id}`).style("stroke", "#000").moveToFront();
-     selectAll("#l" + id).moveToFront();
-     selectAll(".abbr").moveToFront();
-    },
+      // Transition the rectangles
+      selectAll("rect").transition(t)
+        .attr("x", d => x(d.x0))
+        .attr("width", d => x(d.x1) - x(d.x0))
 
-    // Unhighlight a time interval by resetting the stroke of all rectangles
-    "unhighlight": function() {
-     selectAll("rect").style("stroke", "#fff");
+      // Transition tick groups
+      selectAll(".tickGroup").transition(t)
+        .attr("transform", function(d) {
+          select(this).selectAll("text")
+            .style("text-anchor", "middle");
+          
+          if (x(d.x0) === 5) {
+            select(this).select("text")
+              .style("text-anchor", "start");
+          } else if (x(d.x0) === width) {
+            select(this).select("text")
+              .style("text-anchor", "end");
+          }
+
+          return `translate(${x(d.x0)}, 0)`
+        });
+        
+      // Move the full names,
+      selectAll(".fullName").transition(t)
+        .attr("x", d => this.labelX(d))
+        .attr("height", d => d.y1 - d.y0)
+
+      // Move the abbreviations
+      selectAll(".abbr").transition(t)
+        .attr("x", d => this.labelAbbrX(d))
+        .attr("height", d => d.y1 - d.y0)
+
+      // Center whichever interval was clicked
+      select(`#l${d.data.id}`).transition(t)
+        .attr("x", width/2);
+
+      // Position all the ancestors labels in the middle of the scale
+      if (d.parent) {
+        const ancestors = d.ancestors()
+        ancestors.forEach(ancestor => {
+          select(`#l${ancestor.id}, #a${ancestor.id}`).transition(t)
+            .attr("x", width/2);
+        })
+      }
     },
 
     "resize": function() {
@@ -415,18 +343,7 @@ const timescale = (function() {
       select(".timescale svg")
         .style("width", width)
 
-      // setTimeout(() => {
-      //   timescale.goTo(timescale.currentInterval.data.nam)
-      // }, 600);
     },
-
-    /* Interval hash can be exposed publically so that the time scale data can be used 
-       for other things, such as maps */
-    // https://github.com/d3/d3-hierarchy/issues/58 
-    "interval_hash": interval_hash, 
-
-    // Method for getting the currently zoomed-to interval - useful for preserving states
-    "currentInterval": currentInterval
   }
 })();
 

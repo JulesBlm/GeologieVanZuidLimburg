@@ -1,67 +1,54 @@
-import React, {PureComponent} from 'react';
+import React, {useState, useEffect} from 'react';
 import timescale from './timescale';
 
-import plaatsen from './plaatsen.json';
+import plaatsen from './JSONs/plaatsen.json';
 
 const defaultContainer =  ({children}) => <div className="control-panel">{children}</div>;
 
-export default class ControlPanel extends PureComponent {
-  
-    constructor(props) {
-        super(props);    
-        this.handleClick = this.handleClick.bind(this);
-    }
+export default function ControlPanel({viewState, setViewState}) {
+    const [index, setIndex] = useState(0)
+    const {name, period, description} = plaatsen[index];
+    const Container = defaultContainer; //this.props.containerComponent || 
 
-    state = { 
-        index: 0
-    }
-
-    componentDidMount() {
+    useEffect(() => {
         timescale.init("timescale");
+    }, [])
+
+    const handleClick = (increment) => {
+        setIndex(index + increment);
+        const { period, latitude, longitude, zoom } = plaatsen[index+1]; // Ugly hack because index state is not updated immediately, but using timescale in useEffect won't work becaus timiscale is not initialized yet so root node is still unknown
+        setViewState({
+            ...viewState,
+            latitude,
+            longitude,
+            zoom,
+            transitionDuration: 1000
+        })
+        timescale.goToName(period); 
     }
 
-    handleClick(amount) {
-        const { index } = this.state;
-        if (index => 0 && index < plaatsen.length - 1 ) {
-            this.setState((prevState) => {
-                return { index: prevState.index+amount };
-            });
-         
-            const place = plaatsen[this.state.index + amount];
-            this.props.goToViewport(place);
-            if (place.mapstyle) { this.props.changeMapStyle(place.mapstyle); }; ////"mapstyle": "mapbox://styles/mapbox/satellite-streets-v9"
-            timescale.goTo(place.period);
-        }
-    }
-  
-    render() {
-        const Container = this.props.containerComponent || defaultContainer;
-        const currentPlace = plaatsen[this.state.index];
-        // console.log("index", this.state.index);
-
-        return (
-            <Container>
-                <div className="text">
-                    <h2>{currentPlace.name}</h2>
-                    <h3>{currentPlace.period}</h3>
-                    <p dangerouslySetInnerHTML={ {__html:currentPlace.description} } />
-                </div>
-                <div id="button-bar">
-                    <button
-                        onClick={() => this.handleClick(-1)}
-                        className="control"
-                        disabled={this.state.index === 0}>
-                        Vorige
-                    </button>
-                    <button 
-                        onClick={() => this.handleClick(1)} 
-                        className="control"
-                        disabled={this.state.index === plaatsen.length}>
-                        Volgende
-                    </button>
-                </div>
-                <div id="timescale"></div>
-            </Container>
-        );
-  }
+    return (
+        <Container>
+            <div className="text">
+                <h2>{name}</h2>
+                <h3>{period}</h3>
+                <p dangerouslySetInnerHTML={ {__html:description} } />
+            </div>
+            <div id="button-bar">
+                <button
+                    onClick={() => (index > 0) && handleClick(-1) }
+                    className="control"
+                    disabled={index === 0}>
+                    Vorige
+                </button>
+                <button 
+                    onClick={() => (index < plaatsen.length - 1) && handleClick(1)} 
+                    className="control"
+                    disabled={index === plaatsen.length - 1}>
+                    Volgende
+                </button>
+            </div>
+            <div id="timescale"></div>
+        </Container>
+    )
 }

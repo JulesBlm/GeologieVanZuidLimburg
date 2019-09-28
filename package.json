@@ -1,20 +1,21 @@
 {
   "name": "geolimburg",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "dependencies": {
-    "@deck.gl/mapbox": "^6.4.9",
+    "@deck.gl/mapbox": "^7.2.6",
+    "d3-drag": "^1.2.4",
     "d3-ease": "^1.0.5",
     "d3-fetch": "^1.1.2",
     "d3-hierarchy": "^1.1.8",
-    "d3-scale": "^3.0.0",
+    "d3-scale": "^3.1.0",
     "d3-selection": "^1.4.0",
     "d3-transition": "^1.2.0",
-    "deck.gl": "^6.4.9",
-    "react": "^16.8.6",
-    "react-dom": "^16.8.6",
-    "react-map-gl": "^4.1.1",
-    "react-scripts": "^2.1.8"
+    "deck.gl": "^7.2.6",
+    "react": "^16.10.0",
+    "react-dom": "^16.10.0",
+    "react-map-gl": "^5.0.11",
+    "react-scripts": "^3.1.2"
   },
   "scripts": {
     "start": "react-scripts start",
@@ -33,6 +34,6 @@
     "not op_mini all"
   ],
   "devDependencies": {
-    "gh-pages": "^2.0.1"
+    "dotenv": "^8.1.0"
   }
 }
