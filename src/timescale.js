@@ -105,7 +105,7 @@ const timescale = (function() {
           .parentId(d => d.parentId )(result.records); //? add time for Holocene
 
         // Only sum lowest level timespans
-        partition(root.sum(d => (d.level === 5) ? d.start - d.end : 0 )) //
+        partition(root.sum(d => (d.level === 5) ? d.start - d.end : 0 ));
 
         partitionFunc(root);
         
@@ -337,8 +337,8 @@ const timescale = (function() {
       }
     },
 
-    "resize": function() {
-      width = window.innerWidth - 4;
+    "resize": () => {
+      width = 0.3 * window.innerWidth - 4;
       
       select(".timescale svg")
         .style("width", width)

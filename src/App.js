@@ -13,7 +13,7 @@ Potential
 */
 import React, { useState, useCallback, useRef } from 'react';
 import { render } from 'react-dom';
-import ReactMapGL, {NavigationControl} from 'react-map-gl'; // NavigationControl
+import ReactMapGL, { NavigationControl} from 'react-map-gl'; //StaticMap
 import DeckGL from '@deck.gl/react';
 import { GeoJsonLayer } from  '@deck.gl/layers';
 import { MapboxLayer } from "@deck.gl/mapbox";
@@ -28,10 +28,9 @@ const MAPBOX_ACCESS_TOKEN = process.env.REACT_APP_MAPBOX_ACCESS_TOKEN
 
 export default function App() {
   const deckRef = useRef(null);
-  const mapRef = useRef(null);
-  const [glState, setGlState] = useState({});
+  const [glState, setGlState] = useState(null);
   const [hoverState, setHoverState] = useState({});
-  const [viewState, setViewState] = useState(
+  const [myViewState, setMyViewState] = useState(
     {
       longitude: 5.850884,
       latitude: 50.864828,
@@ -47,22 +46,11 @@ export default function App() {
     setHoverState({x, y, hoveredObject: object});
   }
 
-
   const onViewStateChange = ({viewState}) => {
-    setViewState({...viewState});
+    setMyViewState({...viewState});
   }
 
-  const onWebGLInitialized = (gl) => {
-    setGlState({gl});
-  }
-
-  const onMapLoad = () => {   // Add deck layer to mapbox
-    const map = mapRef.current.getMap();
-    const deck = deckRef.current;
-    const mapBoxLayer = new MapboxLayer({id: 'geologicalmap', type: GeoJsonLayer}, deck);
-
-    map.addLayer(mapBoxLayer, 'waterway-label');
-  }
+  const onWebGLInitialized = (gl) => setGlState(gl);
 
   const renderTooltip = () => {
     const {x, y, hoveredObject} = hoverState;
@@ -82,8 +70,8 @@ export default function App() {
 
   useCallback(() => {
     const resize = ({width, height}) => {
-      setViewState({
-        ...viewState,
+      setMyViewState({
+        ...myViewState,
         width: width || window.innerWidth,
         height: height || window.innerHeight
       });
@@ -95,31 +83,29 @@ export default function App() {
     return () => {
       window.removeEventListener('resize', resize);
     };
-  }, [viewState])
+  }, [myViewState])
 
-  const renderLayers = () => {
-    return [
-        new GeoJsonLayer({
-          id: 'geologicalmap',
-          data: geologicalmap,
-          opacity: 0.4,
-          stroked: true,
-          filled: true,
-          getFillColor: ({properties}) => key[properties.KRTCODE].color,
-          getLineColor: [255, 255, 255, 59],
-          pickable: true,
-          onHover: onHover
-        })
-      ];
-  }  
+  const layers =  [
+    new GeoJsonLayer({
+      id: 'geologicalmap',
+      data: geologicalmap,
+      opacity: 0.4,
+      stroked: true,
+      filled: true,
+      getFillColor: ({properties}) => key[properties.KRTCODE].color,
+      getLineColor: [255, 255, 255, 59],
+      pickable: true,
+      onHover: onHover
+    })
+  ];
 
   return (
     <>
     <DeckGL
       width={"70%"}
       ref={deckRef}
-      layers={renderLayers()}
-      viewState={viewState}
+      layers={layers} //renderLayers()
+      viewState={myViewState}
       onViewStateChange={onViewStateChange}
       controller={{type: MapController, dragRotate: false}}
       onWebGLInitialized={onWebGLInitialized}
@@ -127,23 +113,34 @@ export default function App() {
     >
       {glState && (
       <ReactMapGL
-        ref={mapRef}
         mapboxApiAccessToken={MAPBOX_ACCESS_TOKEN}
+        gl={glState}
         reuseMaps
         mapStyle={'mapbox://styles/wompo/cjq4cbqju9k5a2sqmz8lwcepk'}
         preventStyleDiffing={true}
-        onLoad={onMapLoad}
+        onLoad={e => {
+          const { target: map } = e;
+          const geoMapLayer = new MapboxLayer({
+            id: "geologicalmap",
+            deck: deckRef.current.deck,
+          })
+          map.addLayer(geoMapLayer, 'waterway-small');
+          // console.log(map.getStyle().layers)
+        }}
       >
         <div style={{position: 'absolute', right: 10, top: 5, zIndex: 100 }}>
-          <NavigationControl />
+          <NavigationControl
+            onViewportChange={(viewport) => {
+              onViewStateChange({viewState: viewport})
+            }}/>
         </div>
       </ReactMapGL>
     )}
     </DeckGL>
     {renderTooltip()}
     <ControlPanel
-      viewState={viewState}
-      setViewState={setViewState}
+      viewState={myViewState}
+      setViewState={setMyViewState}
     />
   </>
   )

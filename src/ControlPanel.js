@@ -16,7 +16,7 @@ export default function ControlPanel({viewState, setViewState}) {
 
     const handleClick = (increment) => {
         setIndex(index + increment);
-        const { period, latitude, longitude, zoom } = plaatsen[index+1]; // Ugly hack because index state is not updated immediately, but using timescale in useEffect won't work becaus timiscale is not initialized yet so root node is still unknown
+        const { period, latitude, longitude, zoom } = plaatsen[index+increment]; // Ugly hack because index state is not updated immediately, but using timescale in useEffect won't work becaus timiscale is not initialized yet so root node is still unknown
         setViewState({
             ...viewState,
             latitude,
