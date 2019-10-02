@@ -1,11 +1,17 @@
 body {
   margin: 0;
   padding: 0;
+  width: 100%;
+  height: 100%;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
     "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+h2, h3 {
+  margin: 0;
 }
 
 code {
@@ -15,6 +21,11 @@ code {
 
 a {
   color: slategrey;
+}
+
+.mapcontainer {
+  width: 70%;
+  height: 100%;
 }
 
 .control-panel {
@@ -34,23 +45,54 @@ a {
 }
 
 .text {
+  display: inline-block;
+  max-width: 100%;  /* hacky; do not understand why this div overflows*/
+  word-wrap: break-word;
+  white-space: pre-line;
+  box-sizing: border-box;
   padding: 10px;
-  max-width: 29vw;
-  /* min-height: 30vh; */
+  overflow-wrap: break-word;
+  margin: .5em;
   overflow-y: scroll;
-  box-shadow: 10px 0 5px -2px #888;
-  /* box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.6); */
+  /* box-shadow: 0 6px 3px -6px rgba(0,0,0,0.7); */
+  background:
+    /* Shadow covers */
+    linear-gradient(white 30%, rgba(255,255,255,0)),
+    linear-gradient(rgba(255,255,255,0), white 70%) 0 100%,
+    
+    /* Shadows */
+    radial-gradient(50% 0, farthest-side, rgba(0,0,0,.2), rgba(0,0,0,0)),
+    radial-gradient(50% 100%,farthest-side, rgba(0,0,0,.2), rgba(0,0,0,0)) 0 100%;
+  background:
+    /* Shadow covers */
+    linear-gradient(white 30%, rgba(255,255,255,0)),
+    linear-gradient(rgba(255,255,255,0), white 70%) 0 100%,
+    
+    /* Shadows */
+    radial-gradient(farthest-side at 50% 0, rgba(0,0,0,.2), rgba(0,0,0,0)),
+    radial-gradient(farthest-side at 50% 100%, rgba(0,0,0,.2), rgba(0,0,0,0)) 0 100%;
+  background-repeat: no-repeat;
+  background-color: white;
+  background-size: 100% 40px, 100% 40px, 100% 14px, 100% 14px;
+  background-attachment: local, local, scroll, scroll;
+
+}
+
+.text p {
+  max-width: 100%;
 }
 
 #timescale {
   position: sticky;
-  bottom: 10px !important;
+  bottom: 5px !important;
 }
 
 #button-bar {
-  margin: 10px;
+  display: flex;
+  justify-content: space-between;
+  margin: 10px auto;
+  max-width: 100%;
   position: sticky;
-  bottom: 0px;
 }
 
 label {
@@ -61,6 +103,40 @@ label {
 input {
   margin-left: 20px;
   width: 160px;
+}
+
+
+.control-button {
+  border: 2px solid #333;
+  padding: 0.5em;
+  font-weight: 700;
+  font-size: 1.3em;
+  border-radius: 10%;
+  margin-right: 90px;
+  transition: 350ms all ease;
+  outline: none;
+}
+
+.control-button:hover, .control-button:focus {
+  color: white;
+  background: #333;
+  outline: none;
+}
+
+.control-button:active {
+  color: #888;
+  background: #000;
+  outline: none;
+}
+
+.control-button[disabled] {
+	background-color:  #333;
+  color: slategray;
+	cursor: not-allowed;
+}
+
+.control-button[disabled]:hover {
+  color: slategray;
 }
 
 .tooltip {
@@ -75,37 +151,29 @@ input {
   pointer-events: none;
 }
 
-.control {
-  border: 2px solid #333;
-  padding: 10px;
-  font-weight: 700;
-  font-size: 1.3em;
-  border-radius: 10%;
-  margin-right: 90px;
-  transition: 350ms all ease;
-  outline: none;
-}
+@media (max-width: 600px) {
+  .control-panel {
+    max-height: 50%;
+    top: 50%;
+    width: 100%;
+    left: 0;
+    grid-template-rows: [text] 2fr [buttonbar] 1fr [timescale] 1fr;
+  }
 
-.control:hover, .control:focus {
-  color: white;
-  background: #333;
-  outline: none;
-}
+  .mapcontainer {
+    height: 50%;
+    width: 100%;
+  }
 
-.control:active {
-  color: #888;
-  background: #000;
-  outline: none;
-}
+  #button-bar {
+    position: relative;
+    margin: 0 auto;
+    /* bottom: 1em; */
+  }
 
-.control[disabled] {
-	background-color:  #333;
-  color: slategray;
-	cursor: not-allowed;
-}
-
-.control[disabled]:hover {
-  color: slategray;
+  .control-button {
+    padding: none;
+  }
 }
 
 /* geo-timescale */
@@ -143,18 +211,4 @@ font-size: 0.75em;
 }
 .level5 {
 font-size: 0.7em;
-}
-
-@media (min-width: 320px) and (max-width: 480px) {
-  
-  #button-bar {
-    position: relative;
-    margin: 0;
-    width: 40px !important;
-  }
-
-  .text {
-    min-width: 30%;
-    max-width: 50%;
-  }
 }

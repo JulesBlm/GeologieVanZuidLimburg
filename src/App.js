@@ -11,7 +11,7 @@ Potential
 2. Performance improvements
 3. Bring water to front
 */
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { render } from 'react-dom';
 import ReactMapGL, { NavigationControl} from 'react-map-gl'; //StaticMap
 import DeckGL from '@deck.gl/react';
@@ -41,6 +41,10 @@ export default function App() {
       maxZoom: 16,
     }
   );
+
+  useEffect(() => {
+    setMyViewState({ width: window.innerWidth, ...myViewState })
+  }, [])
 
   const onHover = ({x, y, object}) => {
     setHoverState({x, y, hoveredObject: object});
@@ -101,8 +105,10 @@ export default function App() {
 
   return (
     <>
+    <div className='mapcontainer'>
     <DeckGL
-      width={"70%"}
+      width={(myViewState.width > 600) ? "70%" : "100%"}
+      height={(myViewState.width > 600) ? "100%" : "50%"}
       ref={deckRef}
       layers={layers} //renderLayers()
       viewState={myViewState}
@@ -137,6 +143,7 @@ export default function App() {
       </ReactMapGL>
     )}
     </DeckGL>
+    </div>
     {renderTooltip()}
     <ControlPanel
       viewState={myViewState}

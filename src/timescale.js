@@ -34,8 +34,8 @@ const timescale = (function() {
     }
   }
 
-  let width = 0.3 * window.innerWidth - 4;
-  const height = 150;
+  let width; // get width of parentcontainer!
+  let height;
 
   // Initialize data
   let root;
@@ -45,8 +45,9 @@ const timescale = (function() {
 
   return {
 
-    "init": function(divId) {
-
+    "init": function(divId, dimensions) {
+      width = dimensions.width;
+      height = dimensions.height
       // let newX = 0.01;
       // let transformStart;
       // let dragStart;
@@ -338,11 +339,25 @@ const timescale = (function() {
     },
 
     "resize": () => {
-      width = 0.3 * window.innerWidth - 4;
-      
-      select(".timescale svg")
-        .style("width", width)
+      console.group("Resizing ts!")
+      if (window.innerWidth < 600) {
+        width = window.innerWidth - 4;
+        console.log("Small width", width)
+      } else {
+        width = 0.3 * window.innerWidth - 4;
+        console.log("Widescreen", width)
+      }
+      // select(".timescale svg")
+      //   .style("width", width)
 
+      select(".timescale g")
+        .attr("transform", () => "scale(" + parseInt(select(".timescale").style("width"))/width + ")" );
+
+      // select(".timescale svg")
+      //   .style("width",() => select(".timescale").style("width") )
+        // .style("height", () => parseInt(select(".timescale").style("width")) * 0.25 + "px" );
+
+      console.groupEnd();
     },
   }
 })();

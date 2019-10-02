@@ -11,7 +11,11 @@ export default function ControlPanel({viewState, setViewState}) {
     const Container = defaultContainer; //this.props.containerComponent || 
 
     useEffect(() => {
-        timescale.init("timescale");
+        const dimensions = {
+            width: (window.innerWidth > 600) ? (0.3 * window.innerWidth - 4) : (window.innerWidth - 4),
+            height: 150
+        };
+        timescale.init("timescale", dimensions);
     }, [])
 
     const handleClick = (increment) => {
@@ -37,13 +41,13 @@ export default function ControlPanel({viewState, setViewState}) {
             <div id="button-bar">
                 <button
                     onClick={() => (index > 0) && handleClick(-1) }
-                    className="control"
+                    className="control-button"
                     disabled={index === 0}>
                     Vorige
                 </button>
                 <button 
                     onClick={() => (index < plaatsen.length - 1) && handleClick(1)} 
-                    className="control"
+                    className="control-button"
                     disabled={index === plaatsen.length - 1}>
                     Volgende
                 </button>
