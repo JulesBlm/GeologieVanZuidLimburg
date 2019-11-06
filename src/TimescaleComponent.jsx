@@ -1,15 +1,15 @@
-// Not working, find a way to wait until timescale is done initializing before going to periodName
+// Not working, find a way to wait until timescale is done initializing before going to periodName 
 
-import React, {useEffect} from 'react'
+import React, {useEffect, useLayoutEffect} from 'react'
 import timescale from './timescale';
 
 export default function Timescale({periodName}) {
-    useEffect(() => {
+    useLayoutEffect(() => {
         timescale.init("timescale");
     }, [])
 
     useEffect(() => {
-        console.log(periodName)
+        // console.log(periodName)
         timescale.goToName(periodName);
     }, [periodName])
 

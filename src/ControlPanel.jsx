@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState, useLayoutEffect} from 'react';
 import timescale from './timescale';
 
 import plaatsen from './JSONs/plaatsen.json';
@@ -10,7 +10,7 @@ export default function ControlPanel({viewState, setViewState}) {
     const {name, period, description} = plaatsen[index];
     const Container = defaultContainer; //this.props.containerComponent || 
 
-    useEffect(() => {
+    useLayoutEffect(() => {
         const dimensions = {
             width: (window.innerWidth > 600) ? (0.3 * window.innerWidth - 4) : (window.innerWidth - 4),
             height: 150
